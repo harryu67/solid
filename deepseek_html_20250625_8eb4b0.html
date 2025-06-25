@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ප්‍රස්ථාර යෙදුම</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .controls-panel {
+            width: 250px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 500px;
+            flex-grow: 1;
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: white;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .graph-controls {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .graph-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .value-display {
+            display: inline-block;
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        .btn-remove {
+            background-color: #e74c3c;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .btn-remove:hover {
+            background-color: #c0392b;
+        }
+        
+        .custom-tooltip {
+            position: absolute;
+            background: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 14px;
+            z-index: 1000;
+            transform: translate(-50%, -100%);
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-weight: bold;
+            transition: all 0.1s ease;
+        }
+        
+        .tooltip-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid #4CAF50;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .logo {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-family: 'Arial', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            transform: rotate(-5deg);
+        }
+        
+        .logo span:first-child {
+            color: #e74c3c;
+        }
+        
+        .logo span:last-child {
+            color: #2ecc71;
+        }
+        
+        .toggle-coords {
+            position: absolute;
+            top: 10px;
+            right: 150px;
+            background-color: #9b59b6;
+        }
+        
+        .toggle-coords:hover {
+            background-color: #8e44ad;
+        }
+        
+        .toggle-coords.active {
+            background-color: #27ae60;
+        }
+
+        /* ජංගම උපාංග සඳහා මාධ්‍ය විමසුම් */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .main-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .controls-panel {
+                width: 100%;
+                padding: 10px;
+                order: 2;
+            }
+            
+            .chart-container {
+                height: 300px;
+                margin-bottom: 15px;
+                order: 1;
+            }
+            
+            .controls {
+                margin-bottom: 10px;
+                gap: 8px;
+                justify-content: center;
+            }
+            
+            button {
+                padding: 6px 12px;
+                min-width: 120px;
+            }
+            
+            .graph-controls {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .graph-title {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+            
+            .control-group {
+                margin-bottom: 8px;
+            }
+            
+            .value-display {
+                font-size: 14px;
+            }
+            
+            .btn-remove {
+                padding: 3px 6px;
+            }
+            
+            .custom-tooltip {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            
+            .tooltip-arrow {
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #4CAF50;
+                bottom: -5px;
+            }
+            
+            .logo {
+                position: relative;
+                top: auto;
+                right: auto;
+                font-size: 20px;
+                text-align: center;
+                margin-bottom: 10px;
+                transform: rotate(-5deg);
+            }
+            
+            .toggle-coords {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <span>Dil</span> <span>MATHS</span>
+        </div>
+        
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="controls">
+                    <button id="addGraph">නව ප්‍රස්ථාරය</button>
+                    <button id="resetAll">ප්‍රතිස්ථාපනය</button>
+                    <button id="toggleCoords" class="toggle-coords">ඛණ්ඩාංක</button>
+                </div>
+                
+                <div id="graphsContainer"></div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="myChart"></canvas>
+                <div id="customTooltip" class="custom-tooltip" style="display: none;">
+                    <div id="tooltipText"></div>
+                    <div class="tooltip-arrow"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ප්‍රස්ථාර වර්ණ
+        const colors = [
+            '#3498db', '#2ecc71', '#e74c3c', '#f39c12', 
+            '#9b59b6', '#1abc9c', '#d35400', '#34495e'
+        ];
+        
+        // ප්‍රස්ථාර සැකසුම
+        const ctx = document.getElementById('myChart').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: { datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 300,
+                    easing: 'easeOutQuad'
+                },
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false,
+                    axis: 'xy'
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'center',
+                        title: {
+                            display: false,
+                        },
+                        grid: {
+                            color: function(context) {
+                                return context.tick.value === 0 ? 'rgba(0,0,0,1)' : 'rgba(0,0,0,0.1)';
+                            },
+                            lineWidth: function(context) {
+                                return context.tick.value === 0 ? 2 : 1;
+                            }
+                        },
+                        ticks: {
+                            stepSize: 2,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        min: -10,
+                        max: 10
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'center',
+                        title: {
+                            display: false,
+                        },
+                        grid: {
+                            color: function(context) {
+                                return context.tick.value === 0 ? 'rgba(0,0,0,1)' : 'rgba(0,0,0,0.1)';
+                            },
+                            lineWidth: function(context) {
+                                return context.tick.value === 0 ? 2 : 1;
+                            }
+                        },
+                        ticks: {
+                            stepSize: 2,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        min: -10,
+                        max: 10
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            padding: 20,
+                            boxWidth: 20
+                        }
+                    },
+                    tooltip: {
+                        enabled: false,
+                        external: function(context) {
+                            // ඛණ්ඩාංක පෙන්වීම සක්‍රිය නම් පමණක් tooltip පෙන්වන්න
+                            if (!window.showCoordinates) {
+                                document.getElementById('customTooltip').style.display = 'none';
+                                return;
+                            }
+                            
+                            const tooltip = document.getElementById('customTooltip');
+                            const tooltipText = document.getElementById('tooltipText');
+                            
+                            if (context.tooltip.opacity === 0) {
+                                tooltip.style.display = 'none';
+                                return;
+                            }
+                            
+                            const data = context.tooltip.dataPoints[0];
+                            const x = data.parsed.x;
+                            const y = data.parsed.y;
+                            
+                            tooltipText.innerHTML = `
+                                <div>x: ${x.toFixed(2)}</div>
+                                <div>y: ${y.toFixed(2)}</div>
+                            `;
+                            
+                            tooltip.style.display = 'block';
+                            tooltip.style.left = context.tooltip.caretX + 'px';
+                            tooltip.style.top = context.tooltip.caretY + 'px';
+                        }
+                    }
+                }
+            }
+        });
+
+        // ප්‍රස්ථාර ගණන
+        let graphCount = 0;
+        let animationFrameId = null;
+        let lastUpdateTime = 0;
+        window.showCoordinates = false; // ඛණ්ඩාංක පෙන්වීමේ තත්ත්වය
+        
+        // නව ප්‍රස්ථාරයක් එකතු කිරීම
+        function addGraph(a = 1, b = 0, color = colors[0]) {
+            const graphId = `graph-${graphCount}`;
+            graphCount++;
+            
+            // පාලක අංග නිර්මාණය
+            const graphControl = document.createElement('div');
+            graphControl.className = 'graph-controls';
+            graphControl.id = graphId;
+            
+            const colorPickerId = `${graphId}-color`;
+            
+            graphControl.innerHTML = `
+                <div class="graph-title">
+                    <span>ප්‍රස්ථාරය ${graphCount}</span>
+                    <button class="btn btn-remove remove-graph" data-graph="${graphId}">ඉවත්</button>
+                </div>
+                <div class="control-group">
+                    <label for="${graphId}-a">a අගය: <span class="value-display" id="${graphId}-aValue">${a.toFixed(1)}</span></label>
+                    <input type="range" id="${graphId}-a" min="-10" max="10" step="0.1" value="${a}">
+                </div>
+                <div class="control-group">
+                    <label for="${graphId}-b">b අගය: <span class="value-display" id="${graphId}-bValue">${b.toFixed(1)}</span></label>
+                    <input type="range" id="${graphId}-b" min="-10" max="10" step="0.1" value="${b}">
+                </div>
+                <div class="control-group">
+                    <label for="${colorPickerId}">වර්ණය:</label>
+                    <input type="color" id="${colorPickerId}" value="${color}">
+                </div>
+            `;
+            
+            document.getElementById('graphsContainer').appendChild(graphControl);
+            
+            // ප්‍රස්ථාර දත්ත කට්ටලය එකතු කිරීම
+            const dataset = {
+                label: `y = ${a.toFixed(1)}x² ${b >= 0 ? '+' : '-'} ${Math.abs(b).toFixed(1)}`,
+                borderColor: color,
+                backgroundColor: color + '80',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.1,
+                data: []
+            };
+            
+            chart.data.datasets.push(dataset);
+            updateGraphData(graphId, a, b);
+            
+            // සිදුවීම් සවි කිරීම
+            const aInput = document.getElementById(`${graphId}-a`);
+            const bInput = document.getElementById(`${graphId}-b`);
+            const colorInput = document.getElementById(colorPickerId);
+            
+            const handleInput = () => {
+                const now = Date.now();
+                if (now - lastUpdateTime < 16) return;
+                lastUpdateTime = now;
+                
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                
+                animationFrameId = requestAnimationFrame(() => {
+                    updateGraph(graphId);
+                });
+            };
+            
+            aInput.addEventListener('input', handleInput);
+            bInput.addEventListener('input', handleInput);
+            colorInput.addEventListener('input', () => updateGraph(graphId));
+            
+            chart.update();
+        }
+        
+        // ප්‍රස්ථාර දත්ත යාවත්කාලීන කිරීම
+        function updateGraphData(graphId, a, b) {
+            const graphElements = document.querySelectorAll('.graph-controls');
+            const datasetIndex = Array.from(graphElements).findIndex(el => el.id === graphId);
+            
+            if (datasetIndex === -1) return;
+            
+            const data = [];
+            
+            for (let x = -10; x <= 10; x += 0.05) {
+                const y = a * Math.pow(x, 2) + b;
+                if (y >= -10 && y <= 10) {
+                    data.push({ x: x, y: y });
+                }
+            }
+            
+            chart.data.datasets[datasetIndex].data = data;
+        }
+        
+        // ප්‍රස්ථාරය යාවත්කාලීන කිරීම
+        function updateGraph(graphId) {
+            const graphElements = document.querySelectorAll('.graph-controls');
+            const datasetIndex = Array.from(graphElements).findIndex(el => el.id === graphId);
+            
+            if (datasetIndex === -1) return;
+            
+            const a = parseFloat(document.getElementById(`${graphId}-a`).value);
+            const b = parseFloat(document.getElementById(`${graphId}-b`).value);
+            const color = document.getElementById(`${graphId}-color`).value;
+            
+            document.getElementById(`${graphId}-aValue`).textContent = a.toFixed(1);
+            document.getElementById(`${graphId}-bValue`).textContent = b.toFixed(1);
+            
+            chart.data.datasets[datasetIndex].borderColor = color;
+            chart.data.datasets[datasetIndex].backgroundColor = color + '80';
+            chart.data.datasets[datasetIndex].label = `y = ${a.toFixed(1)}x² ${b >= 0 ? '+' : '-'} ${Math.abs(b).toFixed(1)}`;
+            
+            updateGraphData(graphId, a, b);
+            chart.update();
+        }
+        
+        // ප්‍රස්ථාරය ඉවත් කිරීම
+        function removeGraph(graphId) {
+            const graphElement = document.getElementById(graphId);
+            const graphElements = document.querySelectorAll('.graph-controls');
+            const datasetIndex = Array.from(graphElements).findIndex(el => el.id === graphId);
+            
+            if (graphElement && datasetIndex !== -1) {
+                graphElement.remove();
+                chart.data.datasets.splice(datasetIndex, 1);
+                chart.update();
+                
+                const remainingGraphs = document.querySelectorAll('.graph-controls');
+                remainingGraphs.forEach((graph, index) => {
+                    graph.querySelector('.graph-title span').textContent = `ප්‍රස්ථාරය ${index + 1}`;
+                });
+                
+                // ප්‍රස්ථාර ගණන යාවත්කාලීන කරන්න
+                graphCount = remainingGraphs.length;
+            }
+        }
+        
+        // සියලු ප්‍රස්ථාර ප්‍රතිස්ථාපනය කිරීම
+        function resetAllGraphs() {
+            document.getElementById('graphsContainer').innerHTML = '';
+            chart.data.datasets = [];
+            graphCount = 0;
+            chart.update();
+            
+            // ආරම්භක ප්‍රස්ථාරය යළි එකතු කරන්න
+            addGraph(1, 0, colors[0]);
+        }
+        
+        // ඛණ්ඩාංක පෙන්වීම ටොගල් කිරීම
+        function toggleCoordinates() {
+            window.showCoordinates = !window.showCoordinates;
+            const toggleBtn = document.getElementById('toggleCoords');
+            
+            if (window.showCoordinates) {
+                toggleBtn.textContent = 'ඛණ්ඩාංක අඳුරු';
+                toggleBtn.classList.add('active');
+            } else {
+                toggleBtn.textContent = 'ඛණ්ඩාංක';
+                toggleBtn.classList.remove('active');
+                document.getElementById('customTooltip').style.display = 'none';
+            }
+        }
+        
+        // ප්‍රධාන සිදුවීම් සවි කිරීම
+        document.getElementById('addGraph').addEventListener('click', () => {
+            // ප්‍රස්ථාර ගණන අනුව විකල්ප a අගයන්
+            const aValues = [1, -1, 0.5, -0.5, 2, -2];
+            const a = aValues[graphCount % aValues.length];
+            
+            // b අගය සැමවිටම 0 ලෙස තබමු
+            const b = 0;
+            
+            // වර්ණය ප්‍රස්ථාර ගණන අනුව භාවිතා කරන්න
+            addGraph(a, b, colors[graphCount % colors.length]);
+        });
+        
+        document.getElementById('resetAll').addEventListener('click', resetAllGraphs);
+        document.getElementById('toggleCoords').addEventListener('click', toggleCoordinates);
+        
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-graph')) {
+                removeGraph(e.target.dataset.graph);
+            }
+        });
+        
+        // ආරම්භක ප්‍රස්ථාරය - එක් ප්‍රස්ථාරයක් පමණක් (a=1, b=0)
+        addGraph(1, 0, colors[0]);
+    </script>
+</body>
+</html>
